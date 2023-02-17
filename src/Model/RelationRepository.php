@@ -14,7 +14,7 @@ class RelationRepository extends Orm\Repository\Repository {
     }
 
     /**
-     * @return Orm\Collection\ICollection|Model\Layer[]
+     * @return Orm\Collection\ICollection|Layer[]
      */
     public function findLayerPairs() {
         $oSql = $this->builder()

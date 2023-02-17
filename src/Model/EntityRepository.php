@@ -10,7 +10,7 @@ class EntityRepository extends Orm\Repository\Repository {
     }
 
     /**
-     * @return Orm\Collection\ICollection|Model\Entity[]
+     * @return Orm\Collection\ICollection|Entity[]
      */
     public function findLatest()
     {
