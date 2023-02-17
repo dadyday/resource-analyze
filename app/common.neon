@@ -1,0 +1,31 @@
+extensions:
+	dbal: Nextras\Dbal\Bridges\NetteDI\DbalExtension
+	orm: Nextras\Orm\Bridges\NetteDI\OrmExtension
+	migrations: Nextras\Migrations\Bridges\NetteDI\MigrationsExtension
+	console: Contributte\Console\DI\ConsoleExtension(%consoleMode%)
+
+dbal:
+	driver: mysqli
+	host: localhost
+	port: 3306
+	database: business
+	username: root
+	password: root
+	connectionTz: Europe/Berlin
+		
+orm:
+	model: ResourceAnalyze\Model
+#	repositoryFinder: Nextras\Orm\Bridges\NetteDI\DIRepositoryFinder
+
+migrations:
+	dir: %appDir%/../migrations
+	driver: mysql
+	dbal: nextras
+#	withDummyData: true
+	
+services:
+	- ResourceAnalyze\SankeyData
+
+# for tests
+#	- ResourceAnalyze\ArrayMapper
+#	- Nextras\Orm\TestHelper\EntityCreator
