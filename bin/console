@@ -1,0 +1,9 @@
+#!/usr/bin/env php
+<?php declare(strict_types = 1);
+require_once __DIR__.'/../vendor/autoload.php';
+
+$oConfig = App\Bootstrap::boot();
+$oDi = $oConfig->createContainer();
+
+$oConsole = $oDi->getByType(Contributte\Console\Application::class);
+exit($oConsole->run());
