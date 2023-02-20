@@ -13,7 +13,10 @@
         }
     ],
     "scripts": {
-        "web": "start http://localhost:8066/chart.html & php -S localhost:8066 -t public"
+        "web": [
+            "Composer\\Config::disableProcessTimeout",
+            "start http://localhost:8066/chart.html & php -S localhost:8066 -t public"
+        ]
     },
     "require": {
         "nextras/orm": "^4.0",
