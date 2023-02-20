@@ -25,113 +25,88 @@ class SankeyData {
 		$this->oModel = $oModel;
 	}
 
-	function build() {
+	function build($mode = null) {
 		$this->oModel->oRelationRepo->renderIncome();
 		$this->oModel->oRelationRepo->renderCosts();
-		
+
 		$aLayer = $this->oModel->oLayerRepo->findAll()->orderBy('order', Orm\Collection\ICollection::ASC);
 		$oLastLayer = null;
-		$aColor = ['#9977cc','#cc4488','#3388bb','#44cc88','#cccc44'];
-		$aNode = [];
-		$aLinkIncome = [];
-		$aLinkCosts = [];
-		$aLinkDiffs = [];
+		$aColor = ['#9977cc', '#cc4488', '#3388bb', '#44cc88', '#cccc44'];
+
+		$this->aNode = [];
+		$this->aLink = [];
 
 		foreach ($aLayer as $i => $oLayer) {
 			foreach ($oLayer->aEntity as $oEntity) {
 
-				$aNode[] = [
+				$this->aNode[] = [
 					'key' => $oEntity->id,
 					'text' => $oEntity->name,
 					'color' => $aColor[$i] ?? null,
+					'income' => $oEntity->income,
+					'costs' => $oEntity->costs,
 				];
 			}
 		}
 
 		$aRelation = $this->oModel->oRelationRepo->findAll();
 		foreach ($aRelation as $oRelation) {
-			$i = round($oRelation->incomePart * $oRelation->oFrom->income);
-			$o = round($oRelation->costsPart * $oRelation->oTo->costs);
+			$aLink = $this->buildLinks($oRelation, $mode);
 
-			$core = min($i, $o);
-			$diff = abs($o - $i);
-			$color = $i > $o ? '#408040' : '#c04040';
-
-			/*
-			$this->aLink[] = [
-				'from' => $oRelation->oFrom->id, 
-				'to' => $oRelation->oTo->id, 
-				'width' => $core,
-				'color' => '#8080c0',
-			]; //*/
-
-
-			
-			//*
-			$aLinkIncome[] = [
-				'from' => $oRelation->oFrom->id, 
-				'to' => $oRelation->oTo->id, 
-				'width' => $core,
-				'color' => '#80c080',
-			]; //*/
-			//*
-			$aLinkCosts[] = [
-				'from' => $oRelation->oFrom->id, 
-				'to' => $oRelation->oTo->id, 
-				'width' => $core,
-				'color' => '#c08080',
-			]; //*/
-			$aLinkDiffs[] = [
-				'from' => $oRelation->oFrom->id,
-				'to' => $oRelation->oTo->id,
-				'width' => $diff,
-				'color' => $color,
-			]; //*/
+			$this->aLink = array_merge($this->aLink, $aLink);
 		}
-/*
-		foreach ($aLayer as $i => $oLayer) {
-			foreach ($oLayer->aEntity as $oEntity) {
-				
-				$this->aNode[] = [
-					'key' => $oEntity->id,
-					'text' => $oEntity->name,
-					'color' => $aColor[$i] ?? null,
-				];
-
-				
-				$aRelation = $this->oModel->oRelationRepo->findBy(['oFrom' => $oEntity]);
-				foreach ($aRelation as $oRelation) {
-					#dump($oRelation);
-					$this->aLink[] = [
-						'from' => $oEntity->id, 
-						'to' => $oRelation->oTo->id, 
-						'width' => round($oRelation->incomePart * $oEntity->income /100),
-						'color' => '#80c080',
-					]; //* /
-				}
-			}
-		}
-
-		foreach ($aLayer as $i => $oLayer) {
-			foreach ($oLayer->aEntity as $oEntity) {
-				
-				$aRelation = $this->oModel->oRelationRepo->findBy(['oTo' => $oEntity]);
-				foreach ($aRelation as $oRelation) {
-					#dump($oRelation);
-					$this->aLink[] = [
-						'from' => $oRelation->oFrom->id, 
-						'to' => $oEntity->id, 
-						'width' => round($oRelation->costsPart * $oEntity->costs /100),
-						'color' => '#ff8080',
-					]; //* /
-				}
-				
-			}
-		}
-*/		
-		$this->aNode = $aNode;
-		$this->aLink = array_merge($aLinkIncome, $aLinkDiffs, $aLinkCosts);
 	}
+
+	function buildLinks($oRelation, $mode = null) {
+		$i = round($oRelation->incomePart * $oRelation->oFrom->income);
+		$o = round($oRelation->costsPart * $oRelation->oTo->costs);
+
+		$aRet = [];
+		switch ($mode) {
+			case 'in':
+				$aRet[] = $this->buildLink($oRelation, $i, '#80c080', 'Erlös: ' . $i);
+				break;
+			case 'out':
+				$aRet[] = $this->buildLink($oRelation, $o, '#c08080', 'Kosten: ' . $o);
+				break;
+			case 'diff':
+				$core = min($i, $o);
+				$diff = abs($o - $i);
+				$color = $i > $o ? '#408040' : '#c04040';
+				$delta = $i > $o ? 'Überschuss: ' : 'Defizit: ';
+
+				$aRet[] = $this->buildLink($oRelation, $core, '#80c080', 'Erlös: ' . $i);
+				$aRet[] = $this->buildLink($oRelation, $diff, $color, $delta . $diff);
+				$aRet[] = $this->buildLink($oRelation, $core, '#c08080', 'Kosten: ' . $o);
+				break;
+			case 'relo':
+				$v = $oRelation->costsPart * 10000;
+				$info = sprintf('%s %s (%0.1f%%)', $oRelation->value, $oRelation->unit, $oRelation->costsPart*100);
+				$aRet[] = $this->buildLink($oRelation, $v, '#c080c0', $info);
+				break;
+			case 'reli':
+				$v = $oRelation->incomePart * 10000;
+				$info = sprintf('%s %s (%0.1f%%)', $oRelation->value, $oRelation->unit, $oRelation->incomePart*100);
+				$aRet[] = $this->buildLink($oRelation, $v, '#c080c0', $info);
+				break;
+			default:
+				$v = ($oRelation->incomePart + $oRelation->costsPart) * 5000;
+				$aRet[] = $this->buildLink($oRelation, $v, '#c080c0', "$oRelation->value $oRelation->unit");
+				break;
+		}
+		return $aRet;
+	}
+
+	function buildLink($oRelation, $value, $color, $info) {
+		return [
+			'from' => $oRelation->oFrom->id,
+			'to' => $oRelation->oTo->id,
+			'width' => $value,
+			'color' => $color,
+			'info' => $info,
+		];
+	}
+
 
 	function getData() {
 		return [

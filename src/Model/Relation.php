@@ -10,6 +10,7 @@ use Nextras\Orm;
  * @property Entity            $oFrom {m:1 Entity::$aFrom}
  * @property Entity            $oTo {m:1 Entity::$aTo}
  * @property double            $value
+ * @property string            $unit
  * @property double            $incomePart
  * @property double            $costsPart
  */

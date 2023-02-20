@@ -16,8 +16,18 @@
       this.diagram.nodes.each(node => {
         // figure out how tall the node's bar should be
         var height = this.getAutoHeightForNode(node);
+        var mx = node.data.costs + node.data.income;
+        var h = height;
+
         var shape = node.findObject("SHAPE");
         if (shape) shape.height = height;
+
+        var costs = node.findObject("COSTS");
+        // if (costs) costs.height = Math.round(node.data.costs / mx * h);
+
+        var income = node.findObject("INCOME");
+        // if (income) income.height = Math.round(node.data.income / mx * h);
+
         var text = node.findObject("TEXT");
         var ltext = node.findObject("LTEXT");
         var font = "bold 12pt Segoe UI, sans-serif"
@@ -156,21 +166,53 @@
             locationSpot: go.Spot.Left,
             portSpreading: go.Node.SpreadingPacked  // rather than the default go.Node.SpreadingEvenly SpreadingPacked
           },
+
           $(go.TextBlock, textStyle(),
             { name: "LTEXT" },
-            new go.Binding("text", "ltext")),
-          $(go.Shape,
-            {
-              name: "SHAPE",
-              fill: "#2E8DEF",  // default fill color
-              strokeWidth: 0,
-              portId: "",
-              fromSpot: go.Spot.RightSide,
-              toSpot: go.Spot.LeftSide,
-              height: 10,
-              width: 20
-            },
-            new go.Binding("fill", "color")),
+            new go.Binding("text", "ltext")
+          ),
+
+          $(go.Panel,
+              {
+                  padding: 0
+              },
+              $(go.Shape,
+                  {
+                      name: "SHAPE",
+                      fill: "#2E8DEF",  // default fill color
+                      strokeWidth: 0,
+                      portId: "",
+                      fromSpot: go.Spot.RightSide,
+                      toSpot: go.Spot.LeftSide,
+                      height: 10,
+                      width: 20
+                  },
+                  new go.Binding("fill", (node) => node.color ?? '#2E8DEF')
+              ),
+
+              $(go.Panel, go.Panel.Vertical,
+                $(go.Shape,
+                    {
+                        name: "INCOME",
+                        strokeWidth: 0,
+                        fill: 'rgba(0,240,0,0.5)',
+                        margin: 0,
+                        height: 0,
+                        width: 5
+                    },
+                ),
+                $(go.Shape,
+                    {
+                        name: "COSTS",
+                        strokeWidth: 0,
+                        fill: 'rgba(240,0,0,0.5)',
+                        margin: 0,
+                        height: 0,
+                        width: 5
+                    },
+                ),
+            ),
+          ),
           $(go.TextBlock, textStyle(),
             { name: "TEXT" },
             new go.Binding("text"))
@@ -204,7 +246,7 @@
             { isPanelMain: true, fill: null, stroke: "rgba(0, 0, 255, 0.3)", strokeWidth: 0 }),  // use selection object's strokeWidth
             $(go.TextBlock, { font: "bold 8pt Segoe UI, sans-serif", stroke: "black", margin: 5 },
               { name: "TEXT" },
-              new go.Binding("text", "width"))
+              new go.Binding("text", "info"))
         );
 
       myDiagram.linkTemplate =
@@ -224,12 +266,13 @@
       load();
     }
 
-    function load() {
-      const url = 'index.php';
+    function load(mode) {
+        console.log(mode)
+      const url = '/?mode='+mode;
       fetch(url)
         .then(resp => resp.json())
         .then(data => { 
-          console.log(data); 
+          //console.log(data);
           myDiagram.model = go.Model.fromJson(data); 
         })
       ;
@@ -237,6 +280,14 @@
     window.addEventListener('DOMContentLoaded', init);
   </script>
 </div>
+
+<form onchange="load(this.mode.value)">
+    <input name="mode" type="radio" value="reli" checked> Relation
+    <input name="mode" type="radio" value="in"> Erlöse
+    <input name="mode" type="radio" value="diff"> Differenz
+    <input name="mode" type="radio" value="out"> Kosten
+    <input name="mode" type="radio" value="relo"> Relation
+</form>
 
 <div id="myDiagramDiv">
     <canvas tabindex="0"></canvas>
