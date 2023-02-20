@@ -130,7 +130,11 @@ class SankeyData {
 		}
 */		
 		$this->aNode = $aNode;
-		$this->aLink = array_merge($aLinkIncome, $aLinkDiffs, $aLinkCosts);
+		$this->aLink = array_merge(
+			//$aLinkIncome,
+			$aLinkDiffs,
+			//$aLinkCosts
+		);
 	}
 
 	function getData() {

@@ -12,6 +12,9 @@
             "email": "github.com@holgerheyne.de"
         }
     ],
+    "scripts": {
+        "web": "start http://localhost:8066/chart.html & php -S localhost:8066 -t public"
+    },
     "require": {
         "nextras/orm": "^4.0",
         "nette/di": "^3.1",
